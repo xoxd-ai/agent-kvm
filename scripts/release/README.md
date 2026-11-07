@@ -136,19 +136,35 @@ launch the Host, or qualify capture exclusion; those remain attended
 qualification (see `FruitctlHost/ATTENDED-QUALIFICATION.md` and
 `scripts/qualification/overlay_exclusion_gate.mjs`).
 
-Variables, on PZM: `B` is the build root of the release cut (it holds `source/`
-at the cut and `build/` from `build-native.sh`). The identity values are the
-controller's, read from the reviewed pin:
+Variables, on PZM: `B` is the build root of the release cut. It holds `source/`,
+a clean checkout at the cut, and `build/` from `build-native.sh`. `DEP` is a
+separate earlier build root whose inputs `build/` reuses. The identity values are
+the controller's, read from the reviewed pin:
 
 ```sh
 B=/absolute/build-root/of/the/cut
+DEP=/absolute/other-root/build   # a passing build-native.sh output outside $B
 HOST_TAG=<exact-host-tag>
 PIN() { /usr/bin/python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["controller"][sys.argv[2]])' "$B/source/nix/native-release.json" "$1"; }
 ID=$(PIN certificateSha1); TEAM=$(PIN developerIDTeam)
 KC="$HOME/Library/Keychains/login.keychain-db"
 AD="$B/source/scripts/release/apple_distribution.py"
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin   # distribute runs spctl from /usr/sbin
 mkdir -m 700 "$B/host" "$B/host-assets"
 ```
+
+0. **Build (PZM, SSH).** Build with `--reuse-inputs`. `write_manifest.py
+   --native-only` in step 7 requires the build receipt's `dependencyBuildDir`.
+   It also requires the source, build and dependency roots to be distinct. A
+   build without `--reuse-inputs` records no dependency root, so step 7 refuses
+   it. Make `DEP` first with `build-native.sh --output-dir "$DEP" --jobs 2` (or
+   `--dependencies-only`) from the same source lock:
+
+   ```sh
+   cd "$B/source"
+   /usr/bin/python3 -I scripts/release/snapshot_source.py --output "$B/source-inventory.json"
+   ./scripts/build-native.sh --reuse-inputs "$DEP" --output-dir "$B/build" --jobs 2
+   ```
 
 1. **Private copy (PZM, SSH).** Sign a copy so the tested build output stays
    byte-identical for the source package:
@@ -251,7 +267,9 @@ mkdir -m 700 "$B/host" "$B/host-assets"
    ```
 
 8. **File-only install check (PZM, before publication).** Install offline into
-   a scratch parent, run doctor, then uninstall. It launches nothing.
+   a scratch parent, run doctor, then uninstall. It launches nothing. The
+   installer requires Node.js 24, so use a Node 24 executable for `node`
+   when the login profile provides another version.
 
    ```sh
    mkdir -m 700 "$B/install-check"
