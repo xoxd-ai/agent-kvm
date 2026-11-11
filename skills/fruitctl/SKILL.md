@@ -102,7 +102,9 @@ dialog; a human must answer it, so report it and do not click it by coordinates.
 These four codes end the batch, but the session keeps its lease: take a new
 `ax_snapshot` and continue. If a target reports `release_unconfirmed`, the
 operator runs `fruitctl reconcile --target PROFILE` on the broker host. A
-Host-only target clears there; other targets need a reconciled broker restart.
+Host-only target clears there. So does a VNC target with Host capture whose
+input was settled when it failed. Otherwise `reconcile_unsupported` means a
+reconciled broker restart.
 Use `menu_extras: true` on `ax_snapshot` to reach menu-bar extras and Control
 Center. When a large window fills the node budget, read one subtree instead:
 `ax_snapshot {root: "menu"}` for an open menu or popup,

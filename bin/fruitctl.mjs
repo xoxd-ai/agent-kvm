@@ -76,8 +76,8 @@ configPath = values.config || defaultConfigPath();
       'From a Linux seat, doctor --macos runs the probe on the Darwin bridge (--bridge or FRUITCTL_BRIDGE_HOST), which owns the profile.\n' +
       'The relay reconnects with capped backoff and answers clients with typed bridge errors; --once exits on the first bridge loss.\n' +
       'relay --health prints the running relay\'s state as JSON and exits 0 only while its bridge is up.\n' +
-      'reconcile asks the running broker to prove a latched Host-only release and clear it; it prints a JSON receipt\n' +
-      'and exits 1 when the target cannot prove it (VNC lanes still need a reconciled broker restart).\n' +
+      'reconcile asks the running broker to prove a latched Host release and clear it; it prints a JSON receipt\n' +
+      'and exits 1 when the target cannot prove it (a VNC lane with unsettled input needs a reconciled broker restart).\n' +
       'Add --timings to installer commands for bounded aggregate timings; default output is unchanged.\n');
   } else if (command === 'broker') {
     const { createBroker } = await import('../lib/broker/server.mjs');
